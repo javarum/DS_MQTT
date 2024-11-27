@@ -1,0 +1,35 @@
+services:
+  emqx:
+    image: emqx:latest
+    container_name: emqx
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+    volumes:
+      - emqx_data:/opt/emqx/data
+      - emqx_log:/opt/emqx/log
+    healthcheck:
+      test:  ["CMD", "curl", "-f", "http://localhost:18083"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - ds_mqtt_emqx_net
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      emqx:
+        condition: service_healthy
+    networks:
+      - ds_mqtt_emqx_net
+
+volumes:
+  emqx_data:
+  emqx_log:
+
+networks:
+  ds_mqtt_emqx_net:
+    driver: bridge
